@@ -1,4 +1,4 @@
-import { SlLocationPin } from "react-icons/sl";
+import { SlLocationPin } from "react-icons/si";
 import { Heading } from "./Heading";
 import { Avatar } from "./Avatar";
 import { Links } from "./Links";
