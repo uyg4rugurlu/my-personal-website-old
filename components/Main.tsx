@@ -1,4 +1,4 @@
-import { SlLocationPin } from "react-icons/si";
+import { CiLocationOn } from "react-icons/ci";
 import { Heading } from "./Heading";
 import { Avatar } from "./Avatar";
 import { Links } from "./Links";
@@ -14,7 +14,7 @@ export const Main = () => {
           <Link href="https://www.google.com/maps/place/Ankara">
             <a className="w-fit" target="_blank">
               <div className="flex items-center p-1 text-sm px-3 mb-4 w-fit rounded-full text-white bg-[#f54bff]">
-                <SlLocationPin className="mr-2" />
+                <CiLocationOn className="mr-2" />
                 Ankara, Turkey
               </div>
             </a>
