@@ -1,6 +1,6 @@
 {
-  "name": "uygar.xyz",
-  "version": "1.4.0",
+  "name": "notnick.io",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
