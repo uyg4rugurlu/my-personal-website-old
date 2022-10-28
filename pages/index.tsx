@@ -13,10 +13,7 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <Seo
-        title="Uygar Uğurlu"
-        description="Uygar Uğurlu - Full-Stack Web Developer"
-      />
+      <Seo />
       <Layout>
         <Main />
         <About />
