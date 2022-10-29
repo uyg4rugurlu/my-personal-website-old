@@ -20,7 +20,7 @@ export const Main = () => {
             </a>
           </Link>
           <Heading style={{ marginBottom: "0.5rem" }}>
-            Hey, I&apos;m Uygar! <span className="wave">👋</span>
+            Hey, I&apos;m Uygar Uğurlu! <span className="wave">👋</span>
           </Heading>
           <p className="text-gray-700 font-semibold dark:text-gray-100 mb-4">
             Full-Stack Web Developer
