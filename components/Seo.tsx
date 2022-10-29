@@ -23,6 +23,7 @@ export const Seo = () => {
     return (
         <Head>
             <title>Uygar Uğurlu</title>
+            <meta charset="UTF-8">
             <meta name="title" content="Uygar Uğurlu"/>
             <meta name="description"
                   content="Hi there, I'm Uygar Uğurlu &mdash; a full-stack web application developer from Ankara, Türkiye."/>
