@@ -152,7 +152,7 @@ export const Listening: React.FC<Props> = (
                                 {/*/>*/}
                                 <picture className="rounded-lg w-28 h-28">
                                     <source
-                                        srcSet={doing?.spotify.album_art_url}
+                                        src={doing?.spotify.album_art_url}
                                         type="image/webp"
                                         width="128"
                                         height="128"
