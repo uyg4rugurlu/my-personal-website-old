@@ -1,117 +1,193 @@
-import { DISCORD_ID, WEBSOCKET_URL } from "../lib/constants";
-import { useEffect, useState, useMemo } from "react";
-import { Presence } from "../types/lanyard";
-import { FaSpotify } from "react-icons/fa";
-import { Text } from "./Text";
+import {DISCORD_ID, WEBSOCKET_URL} from "../lib/constants";
+import {useEffect, useState, useMemo} from "react";
+import {Presence, Timestamps} from "../types/lanyard";
+import {FaTired} from "react-icons/fa";
+import {AiOutlineLoading3Quarters} from "react-icons/ai";
 
 // Credit to Phineas for the lanyard implementation
 // Credit to Tim for the types (https://github.com/timcole/timcole.me/blob/%F0%9F%A6%84/components/lanyard.tsx)
 
 type Props = {
-  setActive: React.Dispatch<React.SetStateAction<boolean>>;
+    setActive: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 enum Operation {
-  Event,
-  Hello,
-  Initialize,
-  Heartbeat,
+    Event,
+    Hello,
+    Initialize,
+    Heartbeat,
 }
 
 enum EventType {
-  INIT_STATE = "INIT_STATE",
-  PRESENCE_UPDATE = "PRESENCE_UPDATE",
+    INIT_STATE = "INIT_STATE",
+    PRESENCE_UPDATE = "PRESENCE_UPDATE",
 }
 
 type SocketEvent = {
-  op: Operation;
-  t?: EventType;
-  d: Presence | unknown;
-};
-
-const logLanyardEvent = (eventName: string, data: any) => {
-  console.log(
-    `%cLanyard%c <~ ${eventName} %o`,
-    "background-color: #f54bff; border-radius: 5px; padding: 3px; color: #5050ff;",
-    "background: none; color: #f54bff;",
-    data
-  );
+    op: Operation;
+    t?: EventType;
+    d: Presence | unknown;
 };
 
 export const Listening: React.FC<Props> = (
-  { setActive, ...props }: { setActive: (active: boolean) => void } & any,
-  ref: any
+    {setActive, ...props}: { setActive: (active: boolean) => void } & any,
+    ref: any
 ) => {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [doing, setDoing] = useState<Presence>();
+    const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [doing, setDoing] = useState<Presence>();
 
-  const send = (op: Operation, d?: unknown): void => {
-    if (socket !== null) socket.send(JSON.stringify({ op, d }));
-  };
-
-  useEffect(() => {
-    if (socket === null) return () => {};
-
-    socket.onmessage = function ({ data }: MessageEvent): void {
-      const { op, t, d }: SocketEvent = JSON.parse(data);
-
-      if (op === Operation.Hello) {
-        setInterval(
-          () => send(Operation.Heartbeat),
-          (d as { heartbeat_interval: number }).heartbeat_interval
-        );
-        send(Operation.Initialize, { subscribe_to_id: DISCORD_ID });
-      } else if (op === Operation.Event && t) {
-        logLanyardEvent(t, d);
-
-        if ([EventType.INIT_STATE, EventType.PRESENCE_UPDATE].includes(t))
-          setDoing(d as Presence);
-      }
+    const send = (op: Operation, d?: unknown): void => {
+        if (socket !== null) socket.send(JSON.stringify({op, d}));
     };
 
-    socket.onclose = () => {
-      setSocket(null);
-    };
-  }, [socket]);
+    useEffect(() => {
+        if (socket === null) return () => {
+        };
 
-  useEffect(() => {
-    if (!socket) setSocket(new WebSocket(WEBSOCKET_URL));
-  }, [socket]);
+        socket.onmessage = function ({data}: MessageEvent): void {
+            const {op, t, d}: SocketEvent = JSON.parse(data);
 
-  const currentActivity = useMemo(
-    () => doing?.activities.filter((activity) => activity.type === 0)[0],
-    [doing]
-  );
+            if (op === Operation.Hello) {
+                setInterval(
+                    () => send(Operation.Heartbeat),
+                    (d as { heartbeat_interval: number }).heartbeat_interval
+                );
+                send(Operation.Initialize, {subscribe_to_id: DISCORD_ID});
+            } else if (op === Operation.Event && t) {
+                if ([EventType.INIT_STATE, EventType.PRESENCE_UPDATE].includes(t))
+                    setDoing(d as Presence);
+            }
+        };
 
-  useEffect(() => {
-    setActive(doing?.listening_to_spotify || currentActivity);
-  }, [doing, currentActivity]);
+        socket.onclose = () => {
+            setSocket(null);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [socket]);
 
-  if (!doing || !doing.discord_status)
-    return (
-      <div className="flex items-center mb-6">
-        <FaSpotify className="mr-2 text-gray-600 dark:text-gray-300" />
-        <Text>Loading...</Text>
-      </div>
+    useEffect(() => {
+        if (!socket) setSocket(new WebSocket(WEBSOCKET_URL));
+    }, [socket]);
+
+    const currentActivity = useMemo(
+        () => doing?.activities.filter((activity) => activity.type === 0)[0],
+        [doing]
     );
-  return (
-    <a className="flex items-center mb-6 duration-300 text-gray-600 dark:text-gray-300 hover:opacity-50 cursor-pointer w-fit">
-      <FaSpotify className="mr-2" />
-      {doing?.listening_to_spotify ? (
-        <a
-          target="_blank"
-          rel="noreferrer"
-          href={`https://open.spotify.com/track/${doing.spotify.track_id}`}
-        >
-          Listening to{" "}
-          <b className="text-black dark:text-white">{doing.spotify.song}</b> by{" "}
-          <b className="text-black dark:text-white">
-            {doing.spotify.artist.replaceAll(";", ",")}
-          </b>
-        </a>
-      ) : (
-        <div>Not listening to anything...</div>
-      )}
-    </a>
-  );
+
+    const setProgressBar = (timestamps: Timestamps) => {
+        const {start, end} = timestamps;
+        const now = Date.now();
+        // @ts-ignore
+        const progress = ((now - start) / (end - start)) * 100;
+        setActive(progress <= 100);
+        return progress;
+    }
+
+    const setStartTime = (timestamps: Timestamps) => {
+        const {start, end} = timestamps;
+        const now = Date.now();
+        const time = Math.floor((now - start) / 1000);
+        const minutes = Math.floor(time / 60);
+        const seconds = time % 60;
+        // if start == end pause countdown
+        if (start === end) return "00:00";
+        return `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+    }
+
+    const howMinutes = (timestamps: Timestamps) => {
+        const {start, end} = timestamps;
+        const time = Math.floor((end - start) / 1000);
+        const minutes = Math.floor(time / 60);
+        const seconds = time % 60;
+        return `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+    }
+
+    useEffect(() => {
+        if (currentActivity?.timestamps) {
+            const interval = setInterval(() => {
+                setProgressBar(currentActivity.timestamps);
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [currentActivity?.timestamps]);
+
+    useEffect(() => {
+        setActive(doing?.listening_to_spotify || currentActivity);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [doing, currentActivity]);
+
+    if (!doing || !doing.discord_status)
+        return (
+            <section className="flex-1 items-center mb-4">
+                <div
+                    className="rounded-lg flex items-center flex-row bg-white/10 p-4 overflow-x-hidden text-white items-center">
+                    <AiOutlineLoading3Quarters className="animate-spin mr-2"/> &nbsp;&mdash;&nbsp;
+                    <span className="text-sm opacity-90 text-gray-100 dark:text-white">
+                    Loading status...
+                    </span>
+                </div>
+            </section>
+        );
+    stop();
+
+    // @ts-ignore
+    // @ts-ignore
+    return (
+        <section className="flex-1 items-center mb-6">
+            <div
+                className="rounded-lg flex flex-col space-y-4 bg-neutral-800 dark:bg-white/10 p-4 overflow-x-hidden text-gray-100 dark:text-white">
+                {doing?.listening_to_spotify ? (
+                    <div>
+                        <div className="flex space-x-4 items-center">
+                            <div className="flex-shrink-0 relative">
+                                <img
+                                    src={doing.spotify.album_art_url} alt="Spotify album art image" width="128"
+                                    height="128"
+                                    className="rounded-xl h-28 w-28"/>
+                            </div>
+                            <div className="space-y-px">
+                                <a href={`https://open.spotify.com/track/${doing.spotify.track_id}`} target="_blank"
+                                   rel="noreferrer" title="Open on Spotify"
+                                   className="cursor-pointer font-semibold text-lg leading-tight truncate hover:underline">
+                                    {doing.spotify.song}
+                                </a>
+                                <h2 className="leading-tight opacity-50 line-clamp-2">
+                                    by {doing.spotify.artist}
+                                </h2>
+                                <h2 className="leading-tight opacity-50 line-clamp-2">
+                                    on {doing.spotify.album}
+                                </h2>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="rounded-lg bg-gray-200/20 h-2">
+                                <div
+                                    className="rounded-lg bg-white/75 h-2 transition-all duration-300 mt-4"
+                                    style={{width: `${setProgressBar(doing.spotify.timestamps)}%`}}/>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm opacity-90">
+                                    <span className="opacity-70 text-center text-xs">
+                                    {setStartTime(doing.spotify.timestamps)}
+                                        </span>
+                                </span>
+                                <span className="text-sm opacity-90">
+                                    <span className="opacity-70 text-center text-xs">
+                                    {howMinutes(doing.spotify.timestamps)}
+                                        </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center text-center">
+                        <FaTired></FaTired> &nbsp;&mdash;&nbsp;
+                        <span className="text-sm opacity-90 text-gray-100 dark:text-white">
+                    Not listening to Spotify
+                    </span>
+                    </div>
+                )}
+            </div>
+        </section>
+    );
 };

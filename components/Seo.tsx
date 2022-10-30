@@ -23,6 +23,7 @@ export const Seo = () => {
     return (
         <Head>
             <title>Uygar Uğurlu</title>
+            <meta charSet={'UTF-8'} />
             <meta name="title" content="Uygar Uğurlu"/>
             <meta name="description"
                   content="Hi there, I'm Uygar Uğurlu &mdash; a full-stack web application developer from Ankara, Türkiye."/>
@@ -39,6 +40,7 @@ export const Seo = () => {
             <meta property="twitter:description"
                   content="Hi there, I'm Uygar Uğurlu &mdash; a full-stack web application developer from Ankara, Türkiye."/>
             <meta property="twitter:image" content="https://www.uygar.xyz/me.jpeg"/>
+            <meta name="google-site-verification" content="7zd-Cop1OZgN918aNRzjgRHcTQDAqXl31vFy0DGjifo"/>
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
