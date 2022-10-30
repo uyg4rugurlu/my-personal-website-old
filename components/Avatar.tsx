@@ -1,19 +1,17 @@
-import Image from "next/image";
-
 interface Props {
-  width: number;
-  height: number;
+    width: number;
+    height: number;
 }
 
-export const Avatar = ({ width, height }: Props) => {
-  return (
-    <Image
-      className="rounded-full"
-      src="/me.jpeg"
-      width={width}
-      height={height}
-      quality={99}
-      alt="Uygar Uğurlu resimi"
-    />
-  );
+export const Avatar = ({width, height}: Props) => {
+    return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+            src="/me.jpeg"
+            alt="Uygar Uğurlu"
+            className="rounded-full"
+            width={width}
+            height={height}
+        />
+    );
 };
