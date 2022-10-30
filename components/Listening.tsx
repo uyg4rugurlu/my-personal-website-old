@@ -144,7 +144,8 @@ export const Listening: React.FC<Props> = (
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                     src={doing.spotify.album_art_url}
-                                    alt="Album Art"
+                                    alt="Album Art Image"
+                                    draggable="false"
                                     width="128"
                                     height="128"
                                     className="rounded-lg w-28 h-28"
