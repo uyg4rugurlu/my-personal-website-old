@@ -96,7 +96,7 @@ export const Listening: React.FC<Props> = (
 
     const howMinutes = (timestamps: Timestamps) => {
         const {start, end} = timestamps;
-        const time = Math.floor((end - start) / 1000);
+        const time = Math.floor((start) / 1000);
         const minutes = Math.floor(time / 60);
         const seconds = time % 60;
         return `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
