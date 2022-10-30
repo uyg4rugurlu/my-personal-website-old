@@ -3,6 +3,7 @@ import {useEffect, useState, useMemo} from "react";
 import {Presence, Timestamps} from "../types/lanyard";
 import {FaTired} from "react-icons/fa";
 import {AiOutlineLoading3Quarters} from "react-icons/ai";
+import Image from "next/image";
 
 // Credit to Phineas for the lanyard implementation
 // Credit to Tim for the types (https://github.com/timcole/timcole.me/blob/%F0%9F%A6%84/components/lanyard.tsx)
@@ -141,10 +142,13 @@ export const Listening: React.FC<Props> = (
                     <div>
                         <div className="flex space-x-4 items-center">
                             <div className="flex-shrink-0 relative">
-                                <img
-                                    src={doing.spotify.album_art_url} alt="Spotify album art image" width="128"
-                                    height="128"
-                                    className="rounded-xl h-28 w-28"/>
+                                <Image
+                                    src={doing.spotify.album_art_url}
+                                    alt="Spotify album art image"
+                                    width={128}
+                                    height={128}
+                                    className="rounded-xl h-28 w-28"
+                                />
                             </div>
                             <div className="space-y-px">
                                 <a href={`https://open.spotify.com/track/${doing.spotify.track_id}`} target="_blank"
