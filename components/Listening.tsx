@@ -143,7 +143,7 @@ export const Listening: React.FC<Props> = (
                             <div className="flex-shrink-0 relative">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
-                                    src={doing.spotify.album_art_url}
+                                    src={doing?.spotify.album_art_url}
                                     alt="Album Art Image"
                                     draggable="false"
                                     width="128"
