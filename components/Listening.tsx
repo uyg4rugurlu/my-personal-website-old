@@ -95,7 +95,8 @@ export const Listening: React.FC<Props> = (
     }
 
     const setImage = (image: string) => {
-        if (image === null) return "https://i.imgur.com/6bJmZ4m.png";
+        if (image === null || image == '') return "https://i.imgur.com/6bJmZ4m.png";
+        if (image.length > 0) return "https://i.scdn.co/image/" + image;
         return image;
     }
 
@@ -107,6 +108,12 @@ export const Listening: React.FC<Props> = (
         const seconds = time % 60;
         return `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
     }
+
+    useEffect(() => {
+        if (currentActivity) {
+            setImage(currentActivity.assets?.large_image.substring(8));
+        }
+    }, [currentActivity, currentActivity?.assets?.large_image]);
 
     useEffect(() => {
         if (currentActivity?.timestamps) {
