@@ -141,23 +141,13 @@ export const Listening: React.FC<Props> = (
                     <div>
                         <div className="flex space-x-4 items-center">
                             <div className="flex-shrink-0 relative">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                {/*<img*/}
-                                {/*    src={doing?.spotify.album_art_url}*/}
-                                {/*    alt="Album Art Image"*/}
-                                {/*    draggable="false"*/}
-                                {/*    width="128"*/}
-                                {/*    height="128"*/}
-                                {/*    className="rounded-lg w-28 h-28"*/}
-                                {/*/>*/}
-                                <picture className="rounded-lg w-28 h-28">
-                                    <source
-                                        src={doing?.spotify.album_art_url}
-                                        type="image/webp"
-                                        width="128"
-                                        height="128"
-                                    />
-                                </picture>
+                                {/*eslint-disable-next-line @next/next/no-img-element*/}
+                                <img
+                                    src={doing.spotify.album_art_url}
+                                    alt="Large Image"
+                                    draggable="false"
+                                    className="rounded-lg w-28 h-28"
+                                />
                             </div>
                             <div className="space-y-px">
                                 <a href={`https://open.spotify.com/track/${doing.spotify.track_id}`} target="_blank"
