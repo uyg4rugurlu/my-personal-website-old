@@ -132,7 +132,7 @@ export const Listening: React.FC<Props> = (
     stop();
 
     // @ts-ignore
-    
+    // @ts-ignore
     return (
         <section className="flex-1 items-center mb-6">
             <div
