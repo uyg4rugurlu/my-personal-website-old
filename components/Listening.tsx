@@ -94,6 +94,11 @@ export const Listening: React.FC<Props> = (
         return `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
     }
 
+    const setImage = (image: string) => {
+        if (image === null) return "https://i.imgur.com/6bJmZ4m.png";
+        return image;
+    }
+
     const howMinutes = (timestamps: Timestamps) => {
         const {start, end} = timestamps;
         // @ts-ignore
@@ -143,7 +148,7 @@ export const Listening: React.FC<Props> = (
                             <div className="flex-shrink-0 relative">
                                 {/*eslint-disable-next-line @next/next/no-img-element*/}
                                 <img
-                                    src={doing?.spotify?.album_art_url}
+                                    src={setImage(doing?.spotify?.album_art_url)}
                                     alt="Large Image"
                                     draggable="false"
                                     className="rounded-lg w-28 h-28"
