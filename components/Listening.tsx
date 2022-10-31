@@ -155,7 +155,7 @@ export const Listening: React.FC<Props> = (
                             <div className="space-y-px">
                                 <a href={`https://open.spotify.com/track/${doing.spotify.track_id}`} target="_blank"
                                    rel="noreferrer" title="Open on Spotify"
-                                   className="cursor-pointer font-semibold text-lg leading-tight truncate hover:underline">
+                                   className="cursor-pointer font-semibold text-lg leading-tight truncate hover:underline whitespace-normal">
                                     {doing.spotify.song}
                                 </a>
                                 <h2 className="leading-tight opacity-50 line-clamp-2">
