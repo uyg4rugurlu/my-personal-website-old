@@ -146,7 +146,7 @@ export const Listening: React.FC<Props> = (
                             <div className="flex-shrink-0 relative">
                                 {/*eslint-disable-next-line @next/next/no-img-element*/}
                                 <img
-                                    src={`https://i.scdn.co/image/${doing.spotify.album_art_url.split('/').pop()}`}
+                                    src={doing.spotify.album_art_url}
                                     alt="Large Album Image"
                                     draggable="false"
                                     className="rounded-lg w-28 h-28"
