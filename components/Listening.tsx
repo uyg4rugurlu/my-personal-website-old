@@ -94,12 +94,6 @@ export const Listening: React.FC<Props> = (
         return `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
     }
 
-    const setImage = (image: string) => {
-        if (image === null || image == '') return "https://i.imgur.com/6bJmZ4m.png";
-        if (image.length > 0) return "https://i.scdn.co/image/" + image;
-        return image;
-    }
-
     const howMinutes = (timestamps: Timestamps) => {
         const {start, end} = timestamps;
         // @ts-ignore
@@ -108,12 +102,6 @@ export const Listening: React.FC<Props> = (
         const seconds = time % 60;
         return `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
     }
-
-    useEffect(() => {
-        if (currentActivity) {
-            setImage(currentActivity.assets?.large_image.substring(8));
-        }
-    }, [currentActivity, currentActivity?.assets?.large_image]);
 
     useEffect(() => {
         if (currentActivity?.timestamps) {
@@ -145,6 +133,9 @@ export const Listening: React.FC<Props> = (
 
     // @ts-ignore
     // @ts-ignore
+    // @ts-ignore
+    // @ts-ignore
+    // @ts-ignore
     return (
         <section className="flex-1 items-center mb-6">
             <div
@@ -155,8 +146,8 @@ export const Listening: React.FC<Props> = (
                             <div className="flex-shrink-0 relative">
                                 {/*eslint-disable-next-line @next/next/no-img-element*/}
                                 <img
-                                    src={setImage(doing?.spotify?.album_art_url)}
-                                    alt="Large Image"
+                                    src={`https://i.scdn.co/image/${doing.spotify.album_art_url.split('/').pop()}`}
+                                    alt="Large Album Image"
                                     draggable="false"
                                     className="rounded-lg w-28 h-28"
                                 />
