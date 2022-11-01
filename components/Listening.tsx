@@ -1,4 +1,4 @@
-import {useMemo, useEffect} from 'react';
+import {useMemo, useEffect, useState} from 'react';
 import {useLanyardWS} from 'use-lanyard';
 import {AiOutlineLoading3Quarters} from "react-icons/ai";
 import {FaSpotify} from "react-icons/fa";
@@ -22,19 +22,14 @@ const getAssetUrl = (appId: string, asset: string) =>
         ? `https://media.discordapp.net/${asset.replace('mp:', '')}`
         : `https://cdn.discordapp.com/app-assets/${appId}/${asset}.png`;
 
-const getElapsedTime = (timestamp: number) => {
-    const elapsed = Date.now() - timestamp;
-    const seconds = Math.floor(elapsed / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    return `${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s`;
-}
-
 function Listening() {
     const presence = useLanyardWS('936597404055142470');
-    
+
+    const [elapsedTime, setElapsedTime] = useState(0);
+    const [progress, setProgress] = useState(0);
+    const [elapsedSongTime, setElapsedSongTime] = useState('00:00');
+    const [endSongTime, setEndSongTime] = useState('00:00');
+
     const getCurrentTime = () => {
         const date = new Date();
         return date.getTime();
@@ -52,6 +47,63 @@ function Listening() {
         return presence?.activities?.find((x: { type: number; }) => x.type === 0);
     }, [presence]);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            // @ts-ignore
+            const elapsed = Date.now() - activity?.timestamps?.start;
+            const seconds = Math.floor(elapsed / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            // @ts-ignore
+            setElapsedTime((days > 0 ? `${days}d ` : '') + (hours % 24 > 0 ? `${hours % 24}h ` : '') + (minutes % 60 > 0 ? `${minutes % 60}m ` : '') + (seconds % 60 > 0 ? `${seconds % 60}s` : ''));
+
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [activity]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            // @ts-ignore
+            const total = presence?.spotify?.timestamps?.end - presence?.spotify?.timestamps?.start;
+            // @ts-ignore
+            const progress = 100 - (100 * (presence?.spotify?.timestamps?.end - getCurrentTime()) / total);
+            // @ts-ignore
+            setProgress(progress.toFixed(2));
+            if (progress >= 100) {
+                setProgress(100);
+            }
+        }, 100);
+        return () => clearInterval(interval);
+    }, [presence]);
+
+    useEffect(() => {
+        // Time format mm:ss
+        const interval = setInterval(() => {
+            // @ts-ignore
+
+            const elapsed = getCurrentTime() - presence?.spotify?.timestamps?.start;
+            const seconds = Math.floor(elapsed / 1000);
+            const minutes = Math.floor(seconds / 60);
+
+            // @ts-ignore
+            setElapsedSongTime((minutes > 0 ? `${minutes < 10 ? `0${minutes}` : minutes}:` : '00:') + (seconds % 60 > 0 ? `${seconds % 60 < 10 ? `0${seconds % 60}` : seconds % 60}` : '00'));
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [presence]);
+
+    useEffect(() => {
+        const start = presence?.spotify?.timestamps?.start;
+        const end = presence?.spotify?.timestamps?.end;
+        // @ts-ignore
+        const time = Math.floor((end - start) / 1000);
+        const minutes = Math.floor(time / 60);
+        const seconds = time % 60;
+        const formatStr = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+        setEndSongTime(formatStr);
+    }, [presence]);
+
     // @ts-ignore
     return (
         <section className="flex flex-1 mb-4">
@@ -60,6 +112,7 @@ function Listening() {
                     <div
                         className="rounded-lg p-4 w-full max-w-xl bg-zinc-700 dark:bg-white/10 text-white dark:text-gray-300">
                         <div className="flex flex-col items-center sm:flex-row">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 className="w-28 h-28 rounded-full mb-4 sm:mb-0 sm:mr-4"
                                 src={
@@ -93,35 +146,50 @@ function Listening() {
                             <div className="mt-4">
                                 <h5 className="ml-1 mb-1 text-sm font-bold opacity-70">Listening</h5>
                                 <div
-                                    className="flex items-center justify-center rounded-lg overflow-hidden p-4 bg-[rgba(0,0,0,.2)]">
+                                    className="rounded-lg flex flex-col space-y-4 overflow-hidden p-4 bg-[rgba(0,0,0,.2)]">
                                     <div
-                                        className="w-20 h-20 min-w-[5rem] flex items-center justify-center relative mr-4">
-                                        <img
-                                            className="rounded-xl"
-                                            src={`${presence.spotify!.album_art_url}`}
-                                            alt={`${presence.spotify!.song} art`}
-                                        />
-                                        <FaSpotify
-                                            className="w-6 h-6 border-2 rounded-full bg-black border-black absolute bottom-[-8px] right-[-8px]"/>
+                                        className="flex space-x-4 items-center">
+                                        <div className="flex-shrink-0 relative">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                className="rounded-xl h-20 w-20"
+                                                src={`${presence.spotify!.album_art_url}`}
+                                                alt={`${presence.spotify!.song} art`}
+                                            />
+                                            <FaSpotify
+                                                className="w-6 h-6 border-2 rounded-full bg-black border-black absolute bottom-[-8px] right-[-8px]"/>
+                                        </div>
+                                        <div className="space-y-px">
+                                            <a href={`open.spotify.com/track/${presence.spotify!.track_id}`}
+                                               target="_blank"
+                                               rel="noreferrer"
+                                               title="Open on Spotify"
+                                               className="cursor-pointer font-semibold text-lg leading-tight hover:underline">
+                                                {presence.spotify!.song}
+                                            </a>
+                                            <h2 className="opacity-50 line-clamp-2">
+                                                by {presence.spotify!.artist}
+                                            </h2>
+                                            <h2 className="leading-tight opacity-50 line-clamp-2">
+                                                {presence.spotify!.album}
+                                            </h2>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col">
-                                        <a href={`https://open.spotify.com/track/` + presence.spotify!.track_id}
-                                           className="mr-auto" target="_blank" rel="noreferrer">
-                                            <h4 className="text-lg font-bold text-white hover:underline mr-auto">{presence.spotify!.song}</h4>
-                                        </a>
-                                        <span
-                                            className="text-sm text-gray-300 opacity-50">by {presence.spotify!.artist}</span>
-                                        <small
-                                            className="text-xs text-gray-300 opacity-50">on {presence.spotify!.album}</small>
-                                    </div>
-                                    <section className="flex flex-1 items-center mb-6">
-                                        <div className="mt-2">
-                                            <div className="rounded-lg bg-gray-200/20 h-2">
-                                                <div className="rounded-lg bg-white/75 h-2 transition-all"
-                                                     style={{width: '50%'}}/>
+                                    <div className="flex items-center">
+                                        <div className="flex-1">
+                                            <div className="h-2 bg-gray-300 rounded-full">
+                                                <div
+                                                    className="h-2 rounded-full bg-green-500 transition-all"
+                                                    style={{
+                                                        width: `${progress}%`,
+                                                    }}/>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <small className="opacity-50">{elapsedSongTime}</small>
+                                                <small className="opacity-50">{endSongTime}</small>
                                             </div>
                                         </div>
-                                    </section>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -133,6 +201,7 @@ function Listening() {
                                     className="flex flex-row items-center rounded-lg overflow-hidden p-4 bg-[rgba(0,0,0,.2)]">
                                     <div
                                         className="w-20 h-20 min-w-[5rem] flex items-center justify-center bg-black rounded-xl relative mr-4">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
                                             className="rounded-xl"
                                             src={
@@ -143,6 +212,7 @@ function Listening() {
                                             alt="App Large Image"
                                         />
                                         {activity.assets?.small_image && (
+                                            // eslint-disable-next-line @next/next/no-img-element
                                             <img
                                                 className="w-8 h-8 border-2 rounded-full bg-black border-black absolute bottom-[-8px] right-[-8px]"
                                                 src={getAssetUrl(activity.application_id!, activity.assets.small_image!)}
@@ -158,7 +228,7 @@ function Listening() {
                                         )}
                                         {activity.timestamps && (
                                             <span className="text-sm text-gray-300 opacity-50">
-                                                {getElapsedTime(activity.timestamps.start)}
+                                                Elapsed Time: {elapsedTime}
                                             </span>
                                         )}
                                     </div>
