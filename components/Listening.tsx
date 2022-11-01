@@ -1,200 +1,185 @@
-import {DISCORD_ID, WEBSOCKET_URL} from "../lib/constants";
-import {useEffect, useState, useMemo} from "react";
-import {Presence, Timestamps} from "../types/lanyard";
-import {FaTired} from "react-icons/fa";
+import {useMemo, useEffect} from 'react';
+import {useLanyardWS} from 'use-lanyard';
 import {AiOutlineLoading3Quarters} from "react-icons/ai";
+import {FaSpotify} from "react-icons/fa";
 
-// Credit to Phineas for the lanyard implementation
-// Credit to Tim for the types (https://github.com/timcole/timcole.me/blob/%F0%9F%A6%84/components/lanyard.tsx)
-
-type Props = {
-    setActive: React.Dispatch<React.SetStateAction<boolean>>;
+const DiscordStatus = {
+    online: 'Online',
+    idle: 'Idle',
+    dnd: 'Does not disturb',
+    offline: 'Offline',
 };
 
-enum Operation {
-    Event,
-    Hello,
-    Initialize,
-    Heartbeat,
-}
-
-enum EventType {
-    INIT_STATE = "INIT_STATE",
-    PRESENCE_UPDATE = "PRESENCE_UPDATE",
-}
-
-type SocketEvent = {
-    op: Operation;
-    t?: EventType;
-    d: Presence | unknown;
+const StatusColor = {
+    online: 'bg-online',
+    idle: 'bg-idle',
+    dnd: 'bg-dnd',
+    offline: 'bg-offline',
 };
 
-export const Listening: React.FC<Props> = (
-    {setActive, ...props}: { setActive: (active: boolean) => void } & any,
-    ref: any
-) => {
-    const [socket, setSocket] = useState<WebSocket | null>(null);
-    const [doing, setDoing] = useState<Presence>();
+const getAssetUrl = (appId: string, asset: string) =>
+    asset.startsWith('mp:external')
+        ? `https://media.discordapp.net/${asset.replace('mp:', '')}`
+        : `https://cdn.discordapp.com/app-assets/${appId}/${asset}.png`;
 
-    const send = (op: Operation, d?: unknown): void => {
-        if (socket !== null) socket.send(JSON.stringify({op, d}));
-    };
+const getElapsedTime = (timestamp: number) => {
+    const elapsed = Date.now() - timestamp;
+    const seconds = Math.floor(elapsed / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-    useEffect(() => {
-        if (socket === null) return () => {
-        };
+    return `${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s`;
+}
 
-        socket.onmessage = function ({data}: MessageEvent): void {
-            const {op, t, d}: SocketEvent = JSON.parse(data);
-
-            if (op === Operation.Hello) {
-                setInterval(
-                    () => send(Operation.Heartbeat),
-                    (d as { heartbeat_interval: number }).heartbeat_interval
-                );
-                send(Operation.Initialize, {subscribe_to_id: DISCORD_ID});
-            } else if (op === Operation.Event && t) {
-                if ([EventType.INIT_STATE, EventType.PRESENCE_UPDATE].includes(t))
-                    setDoing(d as Presence);
-            }
-        };
-
-        socket.onclose = () => {
-            setSocket(null);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [socket]);
-
-    useEffect(() => {
-        if (!socket) setSocket(new WebSocket(WEBSOCKET_URL));
-    }, [socket]);
-
-    const currentActivity = useMemo(
-        () => doing?.activities.filter((activity) => activity.type === 0)[0],
-        [doing]
-    );
-
-    const setProgressBar = (timestamps: Timestamps) => {
-        const {start, end} = timestamps;
-        const now = Date.now();
-        // @ts-ignore
-        const progress = ((now - start) / (end - start)) * 100;
-        setActive(progress <= 100);
-        return progress;
+function Listening() {
+    const presence = useLanyardWS('936597404055142470');
+    
+    const getCurrentTime = () => {
+        const date = new Date();
+        return date.getTime();
     }
 
-    const setStartTime = (timestamps: Timestamps) => {
-        const {start, end} = timestamps;
-        const now = Date.now();
-        const time = Math.floor((now - start) / 1000);
-        const minutes = Math.floor(time / 60);
-        const seconds = time % 60;
-        // if start == end pause countdown
-        if (start === end) return "00:00";
-        return `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
-    }
+    const user = useMemo(() => {
+        return presence?.discord_user;
+    }, [presence]);
 
-    const howMinutes = (timestamps: Timestamps) => {
-        const {start, end} = timestamps;
-        // @ts-ignore
-        const time = Math.floor((end - start) / 1000);
-        const minutes = Math.floor(time / 60);
-        const seconds = time % 60;
-        return `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
-    }
+    const status = useMemo(() => {
+        return presence && DiscordStatus[presence.discord_status as keyof typeof DiscordStatus];
+    }, [presence]);
 
-    useEffect(() => {
-        if (currentActivity?.timestamps) {
-            const interval = setInterval(() => {
-                setProgressBar(currentActivity.timestamps);
-            }, 1000);
-            return () => clearInterval(interval);
-        }
-    }, [currentActivity?.timestamps]);
+    const activity = useMemo(() => {
+        return presence?.activities?.find((x: { type: number; }) => x.type === 0);
+    }, [presence]);
 
-    useEffect(() => {
-        setActive(doing?.listening_to_spotify || currentActivity);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [doing, currentActivity]);
-
-    if (!doing || !doing.discord_status)
-        return (
-            <section className="flex-1 items-center mb-4">
-                <div
-                    className="rounded-lg flex items-center flex-row bg-white/10 p-4 overflow-x-hidden text-white items-center">
-                    <AiOutlineLoading3Quarters className="animate-spin mr-2"/> &nbsp;&mdash;&nbsp;
-                    <span className="text-sm opacity-90 text-gray-100 dark:text-white">
-                    Loading status...
-                    </span>
-                </div>
-            </section>
-        );
-    stop();
-
-    // @ts-ignore
-    // @ts-ignore
-    // @ts-ignore
-    // @ts-ignore
     // @ts-ignore
     return (
-        <section className="flex-1 items-center mb-6">
-            <div
-                className="rounded-lg flex flex-col space-y-4 bg-neutral-800 dark:bg-white/10 p-4 overflow-x-hidden text-gray-100 dark:text-white">
-                {doing?.listening_to_spotify ? (
-                    <div>
-                        <div className="flex space-x-4 items-center">
-                            <div className="flex-shrink-0 relative">
-                                {/*eslint-disable-next-line @next/next/no-img-element*/}
-                                <img
-                                    src={doing.spotify.album_art_url}
-                                    alt="Large Album Image"
-                                    draggable="false"
-                                    className="rounded-lg w-28 h-28"
-                                />
-                            </div>
-                            <div className="space-y-px">
-                                <a href={`https://open.spotify.com/track/${doing.spotify.track_id}`} target="_blank"
-                                   rel="noreferrer" title="Open on Spotify"
-                                   className="cursor-pointer font-semibold text-lg leading-tight truncate hover:underline whitespace-normal">
-                                    {doing.spotify.song}
-                                </a>
-                                <h2 className="leading-tight opacity-50 line-clamp-2">
-                                    by {doing.spotify.artist}
-                                </h2>
-                                <h2 className="leading-tight opacity-50 line-clamp-2">
-                                    on {doing.spotify.album}
-                                </h2>
-                            </div>
-                        </div>
-                        <div>
-                            <div className="rounded-lg bg-gray-200/20 h-2">
+        <section className="flex flex-1 mb-4">
+            <div className="flex flex-col w-full">
+                {presence ? (
+                    <div
+                        className="rounded-lg p-4 w-full max-w-xl bg-zinc-700 dark:bg-white/10 text-white dark:text-gray-300">
+                        <div className="flex flex-col items-center sm:flex-row">
+                            <img
+                                className="w-28 h-28 rounded-full mb-4 sm:mb-0 sm:mr-4"
+                                src={
+                                    user!.avatar
+                                        ? `https://cdn.discordapp.com/avatars/${user!.id}/${user!.avatar}.gif?size=128`
+                                        : `https://cdn.discordapp.com/embed/avatars/${
+                                            parseInt(user!.discriminator.slice(-1), 10) % 5
+                                        }.png`
+                                }
+                                alt="User Avatar"
+                            />
+                            <div>
+                                <h4 className="text-xl font-bold leading-6">
+                                    {user!.username}
+                                    <span className="font-normal text-gray-400 ml-1 text-lg">
+                  #{user!.discriminator}
+                </span>
+                                </h4>
                                 <div
-                                    className="rounded-lg bg-white/75 h-2 transition-all duration-300 mt-4"
-                                    style={{width: `${setProgressBar(doing.spotify.timestamps)}%`}}/>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm opacity-90">
-                                    <span className="opacity-70 text-center text-xs">
-                                    {setStartTime(doing.spotify.timestamps)}
-                                        </span>
-                                </span>
-                                <span className="text-sm opacity-90">
-                                    <span className="opacity-70 text-center text-xs">
-                                    {howMinutes(doing.spotify.timestamps)}
-                                        </span>
-                                </span>
+                                    className="flex flex-row items-center justify-center text-gray-400 sm:justify-start">
+                                    <div
+                                        className={`w-4 h-4 rounded-full ${
+                                            StatusColor[presence.discord_status as keyof typeof StatusColor]
+                                        } mr-2`}
+                                    />
+                                    <span>{status}</span>
+                                </div>
                             </div>
                         </div>
+                        {presence.listening_to_spotify && (
+                            <div className="mt-4">
+                                <h5 className="ml-1 mb-1 text-sm font-bold opacity-70">Listening</h5>
+                                <div
+                                    className="flex items-center justify-center rounded-lg overflow-hidden p-4 bg-[rgba(0,0,0,.2)]">
+                                    <div
+                                        className="w-20 h-20 min-w-[5rem] flex items-center justify-center relative mr-4">
+                                        <img
+                                            className="rounded-xl"
+                                            src={`${presence.spotify!.album_art_url}`}
+                                            alt={`${presence.spotify!.song} art`}
+                                        />
+                                        <FaSpotify
+                                            className="w-6 h-6 border-2 rounded-full bg-black border-black absolute bottom-[-8px] right-[-8px]"/>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <a href={`https://open.spotify.com/track/` + presence.spotify!.track_id}
+                                           className="mr-auto" target="_blank" rel="noreferrer">
+                                            <h4 className="text-lg font-bold text-white hover:underline mr-auto">{presence.spotify!.song}</h4>
+                                        </a>
+                                        <span
+                                            className="text-sm text-gray-300 opacity-50">by {presence.spotify!.artist}</span>
+                                        <small
+                                            className="text-xs text-gray-300 opacity-50">on {presence.spotify!.album}</small>
+                                    </div>
+                                    <section className="flex flex-1 items-center mb-6">
+                                        <div className="mt-2">
+                                            <div className="rounded-lg bg-gray-200/20 h-2">
+                                                <div className="rounded-lg bg-white/75 h-2 transition-all"
+                                                     style={{width: '50%'}}/>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+                            </div>
+                        )}
+                        {activity && (
+                            <div className="mt-4">
+                                <h5 className="ml-1 mb-1 text-sm font-bold opacity-70">Doing
+                                    something</h5>
+                                <div
+                                    className="flex flex-row items-center rounded-lg overflow-hidden p-4 bg-[rgba(0,0,0,.2)]">
+                                    <div
+                                        className="w-20 h-20 min-w-[5rem] flex items-center justify-center bg-black rounded-xl relative mr-4">
+                                        <img
+                                            className="rounded-xl"
+                                            src={
+                                                activity.assets?.large_image
+                                                    ? getAssetUrl(activity.application_id!, activity.assets.large_image)
+                                                    : `https://dcdn.dstn.to/app-icons/${activity.application_id}`
+                                            }
+                                            alt="App Large Image"
+                                        />
+                                        {activity.assets?.small_image && (
+                                            <img
+                                                className="w-8 h-8 border-2 rounded-full bg-black border-black absolute bottom-[-8px] right-[-8px]"
+                                                src={getAssetUrl(activity.application_id!, activity.assets.small_image!)}
+                                                alt="App Small Image"
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <h5 className="font-bold leading-4 mb-1">{activity.name}</h5>
+                                        <span className="text-sm text-gray-300 opacity-50">{activity.state}</span>
+                                        {activity.details && (
+                                            <span className="text-sm text-gray-300 opacity-50">{activity.details}</span>
+                                        )}
+                                        {activity.timestamps && (
+                                            <span className="text-sm text-gray-300 opacity-50">
+                                                {getElapsedTime(activity.timestamps.start)}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    <div className="flex items-center text-center">
-                        <FaTired></FaTired> &nbsp;&mdash;&nbsp;
-                        <span className="text-sm opacity-90 text-gray-100 dark:text-white">
-                    Not listening to Spotify
+                    <section className="flex-1 items-center mb-4">
+                        <div
+                            className="rounded-lg flex items-center flex-row p-4 overflow-x-hidden bg-zinc-700 dark:bg-white/10 text-white dark:text-gray-300">
+                            <AiOutlineLoading3Quarters className="animate-spin mr-2"/>
+                            <span className="text-sm opacity-90 text-gray-100 dark:text-white">
+                    Loading status <span className="text-gray-300 animate-pulse">...</span>
                     </span>
-                    </div>
+                        </div>
+                    </section>
                 )}
             </div>
         </section>
     );
-};
+}
+
+export default Listening;
