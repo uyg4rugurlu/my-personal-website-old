@@ -2,8 +2,6 @@ import {useMemo, useEffect, useState} from 'react';
 import {useLanyardWS} from 'use-lanyard';
 import {AiOutlineLoading3Quarters} from "react-icons/ai";
 import {FaSpotify} from "react-icons/fa";
-import {Simulate} from "react-dom/test-utils";
-import pause = Simulate.pause;
 
 const DiscordStatus = {
     online: 'Online',
