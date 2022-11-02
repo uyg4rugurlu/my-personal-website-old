@@ -1,7 +1,11 @@
-import {useMemo, useEffect, useState} from 'react';
+import {useMemo} from 'react';
 import {useLanyardWS} from 'use-lanyard';
 import {AiOutlineLoading3Quarters} from "react-icons/ai";
 import {FaSpotify} from "react-icons/fa";
+import ElapsedTime from "./ElapsedTime";
+import ProgressBar from "./ProgressBar";
+import ElapsedSongTime from "./ElapsedSongTime";
+import EndSongTime from "./EndSongTime";
 
 const DiscordStatus = {
     online: 'Online',
@@ -23,17 +27,8 @@ const getAssetUrl = (appId: string, asset: string) =>
         : `https://cdn.discordapp.com/app-assets/${appId}/${asset}.png`;
 
 function Listening() {
+
     const presence = useLanyardWS('936597404055142470');
-
-    const [elapsedTime, setElapsedTime] = useState(0);
-    const [progress, setProgress] = useState(0);
-    const [elapsedSongTime, setElapsedSongTime] = useState('00:00');
-    const [endSongTime, setEndSongTime] = useState('00:00');
-
-    const getCurrentTime = () => {
-        const date = new Date();
-        return date.getTime();
-    }
 
     const user = useMemo(() => {
         return presence?.discord_user;
@@ -45,63 +40,6 @@ function Listening() {
 
     const activity = useMemo(() => {
         return presence?.activities?.find((x: { type: number; }) => x.type === 0);
-    }, [presence]);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            // @ts-ignore
-            const elapsed = Date.now() - activity?.timestamps?.start;
-            const seconds = Math.floor(elapsed / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const hours = Math.floor(minutes / 60);
-            const days = Math.floor(hours / 24);
-
-            // @ts-ignore
-            setElapsedTime((days > 0 ? `${days}d ` : '') + (hours % 24 > 0 ? `${hours % 24}h ` : '') + (minutes % 60 > 0 ? `${minutes % 60}m ` : '') + (seconds % 60 > 0 ? `${seconds % 60}s` : ''));
-
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [activity]);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            // @ts-ignore
-            const total = presence?.spotify?.timestamps?.end - presence?.spotify?.timestamps?.start;
-            // @ts-ignore
-            const progress = 100 - (100 * (presence?.spotify?.timestamps?.end - getCurrentTime()) / total);
-            // @ts-ignore
-            setProgress(progress.toFixed(2));
-            if (progress >= 100) {
-                setProgress(100);
-            }
-        }, 100);
-        return () => clearInterval(interval);
-    }, [presence]);
-
-    useEffect(() => {
-        // Time format mm:ss
-        const interval = setInterval(() => {
-            // @ts-ignore
-
-            const elapsed = getCurrentTime() - presence?.spotify?.timestamps?.start;
-            const seconds = Math.floor(elapsed / 1000);
-            const minutes = Math.floor(seconds / 60);
-
-            // @ts-ignore
-            setElapsedSongTime((minutes > 0 ? `${minutes < 10 ? `0${minutes}` : minutes}:` : '00:') + (seconds % 60 > 0 ? `${seconds % 60 < 10 ? `0${seconds % 60}` : seconds % 60}` : '00'));
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [presence]);
-
-    useEffect(() => {
-        const start = presence?.spotify?.timestamps?.start;
-        const end = presence?.spotify?.timestamps?.end;
-        // @ts-ignore
-        const time = Math.floor((end - start) / 1000);
-        const minutes = Math.floor(time / 60);
-        const seconds = time % 60;
-        const formatStr = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
-        setEndSongTime(formatStr);
     }, [presence]);
 
     // @ts-ignore
@@ -178,15 +116,13 @@ function Listening() {
                                     <div className="flex items-center">
                                         <div className="flex-1">
                                             <div className="h-2 bg-gray-300 rounded-full">
-                                                <div
-                                                    className="h-2 rounded-full bg-green-500 transition-all"
-                                                    style={{
-                                                        width: `${progress}%`,
-                                                    }}/>
+                                                <ProgressBar start={presence?.spotify?.timestamps?.start}
+                                                             end={presence?.spotify?.timestamps?.end}/>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <small className="opacity-50">{elapsedSongTime}</small>
-                                                <small className="opacity-50">{endSongTime}</small>
+                                                <ElapsedSongTime start={presence?.spotify?.timestamps?.start}/>
+                                                <EndSongTime start={presence?.spotify?.timestamps?.start}
+                                                             end={presence?.spotify?.timestamps?.end}/>
                                             </div>
                                         </div>
                                     </div>
@@ -227,9 +163,7 @@ function Listening() {
                                             <span className="text-sm text-gray-300 opacity-50">{activity.details}</span>
                                         )}
                                         {activity.timestamps && (
-                                            <span className="text-sm text-gray-300 opacity-50">
-                                                Elapsed Time: {elapsedTime}
-                                            </span>
+                                            <ElapsedTime start={activity.timestamps.start}/>
                                         )}
                                     </div>
                                 </div>
