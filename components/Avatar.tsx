@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 interface Props {
     width: number;
     height: number;
@@ -5,8 +7,7 @@ interface Props {
 
 export const Avatar = ({width, height}: Props) => {
     return (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
             src="/me.jpeg"
             alt="Uygar Uğurlu"
             className="rounded-full"

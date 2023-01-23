@@ -5,7 +5,7 @@ import { Text } from "./Text";
 
 export const Contact = () => {
   return (
-    <section className="flex flex-col mb-12">
+    <section className="flex flex-col">
       <Heading>Contact 💌</Heading>
       <Text>
         Be sure to shoot me a{" "}

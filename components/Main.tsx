@@ -16,7 +16,7 @@ export const Main = () => {
                     <Link href="https://www.google.com/maps/place/Ankara">
                         <a className="w-fit" target="_blank">
                             <div
-                                className="flex items-center p-1 text-sm px-3 mb-4 w-fit rounded-full text-white bg-[#f54bff]">
+                                className="flex items-center p-1 text-sm px-3 mb-4 w-fit rounded-full text-white bg-pink-500">
                                 <IoIosPin className="mr-2 text-xl"/>
                                 Ankara, Turkey
                             </div>

@@ -29,8 +29,7 @@ export const About = () => {
                 &#38;{" "}
                 <LinkTag href="https://php.net/" target="_blank">
                     PHP
-                </LinkTag>{" "}
-                .
+                </LinkTag>
             </Text>
             <Text style={{marginBottom: `${TEXT_MARGIN_BOTTOM}rem`}}>
                 Besides programming, I like to listen to music, travel in my spare time and go out with my friends.
